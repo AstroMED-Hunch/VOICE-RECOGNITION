@@ -1,5 +1,7 @@
 # AstroMED VOICE
 
+<img width="1795" height="681" alt="image" src="https://github.com/user-attachments/assets/6244e522-e1f7-4b97-b988-de490785459c" />
+
 **NASA HUNCH Medical Storage Management: LLM Voice Guidance Layer**
 
 A real-time voice guidance interface for the AstroMED medical supply storage kiosk. The system listens to the physical shelf storage and guides crew members through each protocol step using a locally-running LLM and text-to-speech output.
