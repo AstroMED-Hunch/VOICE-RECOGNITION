@@ -176,7 +176,7 @@ All other speech is transcribed to the console. The LLM evaluates it and may res
 ## File Structure
 
 ```
-astro-med-voice.html    — complete interface, single file, no dependencies to install
+astromed-voice-recognition.html   — complete interface, single file, no dependencies to install
 README.md               — this file
 ```
 
