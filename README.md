@@ -14,20 +14,6 @@ The LLM is driven entirely by backend events. It does not respond to arbitrary c
 
 ---
 
-## Features
-
-- Real-time protocol guidance via text-to-speech as WebSocket events fire
-- LLM responses grounded strictly in live backend data — no hallucinated values
-- Continuous speech recognition with phonetic autocorrection for domain terms
-- Three-path voice input: confirmation gate, emergency override, silent drop for everything else
-- Off-protocol crew speech receives a console-only LLM response — no audio
-- Primary LLM: Ollama local inference (default, no internet required after setup)
-- Emergency LLM: WebLLM in-browser via WebGPU (toggled on demand, falls back to Ollama when disabled)
-- Debug toggle to surface WebSocket traffic and system logs in the console
-- Single-file deployment — no build step, no framework, open in any Chromium browser
-
----
-
 ## System Architecture
 
 ### Voice Interface (Frontend)
