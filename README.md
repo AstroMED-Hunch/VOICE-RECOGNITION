@@ -100,9 +100,8 @@ ollama serve
 
 - CORS enabled if running on a separate machine
 
-### Emergency LLM (WebLLM — optional)
+### Emergency LLM (WebLLM - optional)
 
-- Chrome 113+ or Edge 113+ (WebGPU required)
 - GPU with at least 2GB VRAM recommended
 - First activation downloads ~800MB (Llama 3.2 1B), cached permanently after that
 - Works fully offline after initial cache
@@ -135,24 +134,24 @@ Refer to the main AstroMED repository for backend setup.
 
 ### 3. Open the voice interface
 
-Open `astro-med-voice.html` directly in Chrome or Edge. Grant microphone access when prompted — this happens once and is not requested again.
+Remember the backend has to be up and running for the voice interface to function through protocols.
 
 ---
 
 ## Usage
 
-**Live button** — toggles continuous speech recognition on and off. Disabled until the AI model is confirmed online.
+**Live button** - toggles continuous speech recognition on and off. Disabled until the AI model is confirmed online.
 
-**Emergency LLM toggle** — switches from Ollama to an in-browser WebLLM model. Use if the local Ollama server becomes unavailable. Toggling off restores Ollama.
+**Emergency LLM toggle** - switches from Ollama to an backup WebLLM model. Use if the local Ollama server becomes unavailable. Toggling off restores Ollama.
 
-**Debug toggle** — surfaces WebSocket message traffic, Ollama connection status, speech recognition events, and system logs in the console.
+**Debug toggle** - surfaces WebSocket message traffic, Ollama connection status, speech recognition events, and system logs in the console.
 
 ### Voice Commands
 
 Under normal operation crew speech is transcribed but only two input paths produce a response:
 
-- **Confirmation** — when a checkout is pending, say `yes` / `confirm` or `no` / `cancel`
-- **Emergency** — say `emergency` at any time to trigger the emergency protocol override
+- **Confirmation** = when a checkout is pending, say `yes` / `confirm` or `no` / `cancel`
+- **Emergency** = say `emergency` at any time to trigger the emergency protocol override
 
 All other speech is transcribed to the console. The LLM evaluates it and may respond in the console if the input is a relevant question about the system — but does not speak.
 
@@ -161,8 +160,7 @@ All other speech is transcribed to the console. The LLM evaluates it and may res
 ## File Structure
 
 ```
-astromed-voice-recognition.html   — complete interface, single file, no dependencies to install
-README.md               — this file
+astromed-voice-recognition.html   -complete interface, single file, no dependencies to install
 ```
 
 All vendor dependencies (Augmented UI, Google Fonts) are loaded from CDN. WebLLM is imported dynamically only when the Emergency LLM toggle is activated.
