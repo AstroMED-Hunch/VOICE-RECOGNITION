@@ -6,19 +6,19 @@ Voice guidance layer for the AstroMED medical storage kiosk. Part of the NASA HU
 
 ---
 
-The kiosk runs a WebSocket-driven state machine that handles box detection, face recognition, shelf assignment, pill verification, and checkout. This module sits on top of that and speaks to whoever is standing at the kiosk — telling them what to do at each step, reading back scan results, and waiting for verbal confirmation where needed.
+The kiosk runs a WebSocket-driven state machine that handles box detection, face recognition, shelf assignment, pill verification, and checkout. This module sits on top of that and speaks to whoever is standing at the kiosk, telling them what to do at each step, reading back scan results, and waiting for verbal confirmation where needed.
 
-It's a single HTML file. No build step, no framework. Open it in Chrome or Edge alongside the kiosk and it just works.
+It's a single HTML file. No build step, no framework.
 
 ---
 
 ## How the guidance works
 
-Every time the backend emits a protocol event, the voice layer captures the current system state, strips any null values, and sends it to a local LLM (Ollama running `gemma3:4b`). The model gets the state data and a task — something like "tell the crew member which shelf to place the box at" — and produces one or two sentences. Those get spoken aloud via the browser's TTS engine and printed to the console.
+Every time the backend emits a protocol event, the voice layer captures the current system state, strips any null values, and sends it to a local LLM (Ollama running `gemma3:4b`). The model gets the state data and a task, something like "tell the crew member which shelf to place the box at", and produces one or two sentences. Those get spoken aloud and printed to the console.
 
 The model is hard-constrained to only reference values that exist in the state snapshot. It can't guess a shelf name or invent a crew member's identity.
 
-Voice input from the crew is narrow on purpose. The mic stays open, but the system only acts on two things: a yes/no during an active confirmation prompt, and the word "emergency" which overrides everything. Anything else gets transcribed and quietly evaluated — if it's a relevant question the LLM writes a response to the console, but it doesn't speak.
+Voice input from the crew is narrow on purpose. The mic stays open, but the system only acts on two things: a yes/no during an active confirmation prompt, and the word "emergency" which overrides everything. Anything else gets transcribed and quietly evaluated. If it's a relevant question the LLM writes a response to the console, but it doesn't speak.
 
 ---
 
@@ -50,17 +50,15 @@ ollama pull gemma3:4b
 ollama serve
 ```
 
-Then start the AstroMED backend (see the main repo), and open `astromed-voice-recognition.html` in Chrome or Edge. The browser will ask for microphone access once.
-
-If Ollama is running on a separate machine, CORS needs to be enabled on that machine.
+Then start the AstroMED backend (see the main repo). If Ollama is running on a separate machine, CORS needs to be enabled on that machine.
 
 ---
 
 ## The interface
 
-The **Live** button starts and stops the mic. It's grayed out until Ollama connects.
+The **Live** button starts and stops the mic. It stays grayed out until Ollama connects.
 
-The **Emergency LLM** toggle is a fallback — if Ollama goes offline mid-session, flipping this on switches to a backup model so guidance can continue. Toggle it back off to return to Ollama when it's back.
+The **Emergency LLM** toggle is a fallback. If Ollama goes offline mid-session, flipping this on switches to a backup model so guidance can continue. Toggle it back off to return to Ollama when it's back up.
 
 The **Debug** toggle shows raw WebSocket traffic and system logs in the console. Off by default, useful when something isn't behaving.
 
