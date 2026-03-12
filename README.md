@@ -1,187 +1,148 @@
 # AstroMED VOICE
 
-<img width="1795" height="681" alt="image" src="https://github.com/user-attachments/assets/6244e522-e1f7-4b97-b988-de490785459c" />
+![AstroMED VOICE interface](https://github.com/user-attachments/assets/6244e522-e1f7-4b97-b988-de490785459c)
 
-**NASA HUNCH Medical Storage Management: LLM Voice Guidance Layer**
+**NASA HUNCH Medical Storage Management — LLM Voice Guidance Layer**
 
-A real-time voice guidance interface for the AstroMED medical supply storage kiosk. The system listens to the physical shelf storage and guides crew members through each protocol step using a locally-running LLM and text-to-speech output.
-
----
-
-## Longer Overview
-
-AstroMED VOICE sits on top of the storage management kiosk as a voice layer. It does not control the hardware, but it mirrors every state transition broadcast by the backend over WebSocket and uses an LLM to generate concise spoken guidance for the crew member standing at the kiosk in real time.
-
-The LLM is driven entirely by backend events. It does not respond to arbitrary conversation. Voice input from the crew is limited to yes/no confirmation during active protocol steps and an emergency keyword that bypasses all state.
+A real-time voice guidance interface for the AstroMED medical supply storage kiosk. The system listens to the backend's WebSocket state machine and guides crew members through each protocol step using a locally-running LLM and text-to-speech output.
 
 ---
 
-## System Architecture
+## What it does
 
-### Voice Interface (Frontend)
+AstroMED VOICE is a voice layer that sits on top of the storage management kiosk. It doesn't control any hardware directly — it listens to every state change the backend broadcasts and uses an LLM to generate spoken guidance for whoever is standing at the kiosk.
 
-The frontend handles both **voice input and spoken output**, while coordinating with the backend through WebSocket events.
+The LLM only fires on backend protocol events. It doesn't respond to open-ended conversation. The only voice input the system actually acts on is yes/no confirmation during an active protocol step, and an emergency keyword that overrides everything.
 
-**Recognition Flow**
+---
 
-1. The system listens for WebSocket events from the backend.
-2. Incoming events trigger **protocol handlers** in the interface.
-3. A **live state snapshot** is sent to the LLM.
-4. The LLM generates a response, which is:
-   - displayed in the console
-   - spoken through **text-to-speech**
-
-### Voice Input
-
-Voice commands are captured using the **Web Speech API**:
-
-- Speech → converted to text (STT)
-- Commands are parsed by the voice handler
-- Sensitive actions pass through a **Yes/No confirmation gate**
-- An **emergency override** allows immediate interruption or control
-
-### Backend Connection
-
-The interface communicates with the **Storage Management Backend** via WebSocket:
+## How it works
 
 ```
-ws://localhost:3000
+Backend emits event → WebSocket → protocol handler fires
+    → live state snapshot sent to LLM
+    → LLM response spoken via TTS + printed to console
+
+Crew speaks → STT → yes/no gate or emergency override
 ```
 
-The backend provides real-time operational data and services including:
-
-- Box detection
-- Face recognition
-- Shelf operations
-
-### System Interaction Summary
-
-- Backend emits events → frontend receives via WebSocket
-- Frontend updates system state → sends context to LLM
-- LLM generates responses → spoken via TTS
-- User voice commands → processed through STT → validated → executed
+All LLM responses are grounded strictly in the live state data — box IDs, shelf locations, face recognition results, pill scan data — whatever the backend actually sent. The model is instructed never to reference a value that isn't in the data block, so it can't hallucinate shelf names or crew identities.
 
 ---
 
-## Protocol States
+## Protocol states
 
-The voice layer handles every state the backend can broadcast:
+Every state the backend can broadcast is handled:
 
-| State | Trigger | Voice Guidance |
-|------|------|------|
-| `boxEntered` | Sensor detects a new box | Asks crew to confirm registration |
-| `boxExited` | Box removed before registration | Acknowledges, confirms system ready |
-| `face_recognition_boxentry` | Identity check for box entry | Instructs crew to face the camera |
-| `face_recognition_boxexit` | Identity check for checkout | Instructs crew to face the camera |
-| `faceRecognitionUpdate` | Face scan result received | Confirms identity or states error |
-| `boxLocation` | Shelf assigned after registration | Directs crew to place box at shelf |
-| `shelves_full` | No available shelves | Tells crew to wait |
-| `multiple_boxes` | Multiple boxes in sensor frame | Tells crew to remove extra boxes |
-| Checkout initiated | Crew triggers a shelf checkout | Prompts verbal yes/no confirmation |
+| State | What happened | What the system says |
+|---|---|---|
+| `boxEntered` | Sensor picked up a new box | Asks crew if they want to register it |
+| `boxExited` | Box removed before finishing | Acknowledges, resets to idle |
+| `boxEnterCancel` | Backend canceled the entry | Tells crew the registration was canceled |
+| `face_recognition_boxentry` | ID check started for box entry | Tells crew to look at the camera |
+| `face_recognition_boxexit` | ID check started for checkout | Tells crew to look at the camera |
+| `faceRecognitionUpdate` | Face scan result came back | Confirms the name or describes the error |
+| `boxLocation` | Shelf assigned after registration | Tells crew which shelf to put the box at |
+| `shelves_full` | No open shelves | Tells crew to wait |
+| `multiple_boxes` | More than one box in frame | Tells crew to remove the extras |
+| `pill_checkup` | Pill verification required | Tells crew to point the camera at the pills and capture |
+| `pillScanResult` | Pill scan completed | Reads back detected pill types and quantities |
+| Checkout initiated | Crew triggers a checkout | Asks yes or no to confirm, waits for voice response |
 
 ---
 
 ## Requirements
 
-### Primary LLM (Ollama — default)
+### Primary LLM — Ollama (default)
 
-- Ollama installed and running: https://ollama.com  
-- Model pulled:
+This is the normal path. Runs locally, no internet needed once set up.
 
-```
-ollama pull gemma3:4b
-```
+- Install Ollama: https://ollama.com
+- Pull the model: `ollama pull gemma3:4b`
+- Start the server: `ollama serve`
+- If Ollama is running on a different machine, make sure CORS is enabled
 
-- Server running:
+### Emergency LLM — WebLLM (optional)
 
-```
-ollama serve
-```
-
-- CORS enabled if running on a separate machine
-
-### Emergency LLM (WebLLM - optional)
-
-- GPU with at least 2GB VRAM recommended
-- First activation downloads ~800MB (Llama 3.2 1B), cached permanently after that
-- Works fully offline after initial cache
+If Ollama goes down during a session, the Emergency LLM toggle loads a backup model that runs entirely in the browser via WebGPU. First load pulls about 800MB and caches it permanently — after that it works offline. Needs Chrome 113+ or Edge 113+ and a GPU with at least 2GB VRAM.
 
 ### Browser
 
-- Chrome 113+ or Edge 113+ required for both WebGPU (Emergency LLM) and Web Speech API (STT)
-- Microphone access must be permitted on first load
+Chrome 113+ or Edge 113+. Both WebGPU (for the emergency model) and the Web Speech API (for STT) require a Chromium-based browser. Microphone access is requested once on page load.
 
 ### Backend
 
-- Storage management WebSocket server at `ws://localhost:3000`
+- WebSocket server at `ws://localhost:3000`
 - Shelf data API at `http://localhost:8000/getShelves`
 
 ---
 
 ## Setup
 
-### 1. Install and start Ollama
+**1. Get Ollama running**
 
 ```bash
-# Install from https://ollama.com
 ollama pull gemma3:4b
 ollama serve
 ```
 
-### 2. Start the storage management backend
+**2. Start the AstroMED backend**
 
-Refer to the main AstroMED repository for backend setup.
+See the main AstroMED repository for backend setup. The voice interface needs the backend up before it can do anything useful.
 
-### 3. Open the voice interface
+**3. Open the interface**
 
-Remember the backend has to be up and running for the voice interface to function through protocols.
-
----
-
-## Usage
-
-**Live button** - toggles continuous speech recognition on and off. Disabled until the AI model is confirmed online.
-
-**Emergency LLM toggle** - switches from Ollama to an backup WebLLM model. Use if the local Ollama server becomes unavailable. Toggling off restores Ollama.
-
-**Debug toggle** - surfaces WebSocket message traffic, Ollama connection status, speech recognition events, and system logs in the console.
-
-### Voice Commands
-
-Under normal operation crew speech is transcribed but only two input paths produce a response:
-
-- **Confirmation** = when a checkout is pending, say `yes` / `confirm` or `no` / `cancel`
-- **Emergency** = say `emergency` at any time to trigger the emergency protocol override
-
-All other speech is transcribed to the console. The LLM evaluates it and may respond in the console if the input is a relevant question about the system — but does not speak.
+Open `astromed-voice-recognition.html` in Chrome or Edge. Allow microphone access when the browser asks — it only asks once.
 
 ---
 
-## File Structure
+## Controls
 
-```
-astromed-voice-recognition.html   -complete interface, single file, no dependencies to install
-```
+**Live** — starts and stops continuous speech recognition. Stays grayed out until Ollama is confirmed online.
 
-All vendor dependencies (Augmented UI, Google Fonts) are loaded from CDN. WebLLM is imported dynamically only when the Emergency LLM toggle is activated.
+**Emergency LLM** — flips from Ollama to the in-browser WebLLM backup. Toggle it off to switch back. The first time you turn it on it'll download the model, which takes a moment.
+
+**Debug** — shows raw WebSocket traffic, Ollama connection logs, and speech recognition events in the console. Off by default.
 
 ---
 
-## WebSocket Message Reference
+## Voice input
 
-Messages the voice layer listens for from the backend:
+Most crew speech just gets transcribed to the console. The LLM reads it and may write a response there too, but it won't speak unless it's a protocol event that calls for it.
+
+The only two voice paths that actually do something:
+
+- **Confirmation** — during a checkout, say `yes`, `confirm`, `no`, or `cancel`
+- **Emergency** — say `emergency` at any point to trigger the override regardless of state
+
+---
+
+## WebSocket message reference
 
 ```
 boxEntered               { type, message: boxId }
 boxExited                { type }
+boxEnterCancel           { type }
 statusUpdate             { type, message: statusString }
 boxLocation              { type, message: shelfLocation }
 faceRecognitionUpdate    { type, message: crewName | "err_nodetect" | "err_multiple" }
-boxUpdate                { type }  — triggers shelf data refresh from REST API
+pillScanResult           { type, pills: [{ pill_type, quantity }] }
+boxUpdate                { type }
 ```
+
+---
+
+## File structure
+
+```
+astromed-voice-recognition.html   — the whole interface, one file, no build step
+README.md
+```
+
+Augmented UI and Google Fonts load from CDN. WebLLM is only imported dynamically when the Emergency LLM toggle is switched on.
 
 ---
 
 ## Part of NASA HUNCH
 
-This interface is a component of the AstroMED Medical Storage Management System, developed as part of the NASA High school students United with NASA to Create Hardware (HUNCH) program.
+AstroMED VOICE is part of the AstroMED Medical Storage Management System, built for the NASA High school students United with NASA to Create Hardware (HUNCH) program.
