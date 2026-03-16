@@ -1,6 +1,6 @@
 # AIMS VOICE
 
-![AIMS VOICE interface](https://github.com/user-attachments/assets/6244e522-e1f7-4b97-b988-de490785459c)
+![AIMS VOICE interface](<img width="1870" height="924" alt="Screenshot 2026-03-16 10 39 30 AM" src="https://github.com/user-attachments/assets/b532b7e8-c8dc-4eb0-8fdf-e4067901536c" />)
 
 Voice guidance layer for the AIMS medical storage kiosk. Part of the NASA HUNCH program.
 
