@@ -1,8 +1,8 @@
-# AstroMED VOICE
+# AIMS VOICE
 
-![AstroMED VOICE interface](https://github.com/user-attachments/assets/6244e522-e1f7-4b97-b988-de490785459c)
+![AIMS VOICE interface](https://github.com/user-attachments/assets/6244e522-e1f7-4b97-b988-de490785459c)
 
-Voice guidance layer for the AstroMED medical storage kiosk. Part of the NASA HUNCH program.
+Voice guidance layer for the AIMS medical storage kiosk. Part of the NASA HUNCH program.
 
 ---
 
@@ -50,7 +50,7 @@ ollama pull gemma3:4b
 ollama serve
 ```
 
-Then start the AstroMED backend (see the main repo). If Ollama is running on a separate machine, CORS needs to be enabled on that machine.
+Then start the AIMS backend (see the main repo). If Ollama is running on a separate machine, CORS needs to be enabled on that machine.
 
 ---
 
